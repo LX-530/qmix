@@ -1,4 +1,9 @@
-import wandb
+try:
+    import wandb
+except ImportError:
+    wandb = None
+import json
+import os
 import numpy as np
 from itertools import chain
 import torch
@@ -13,11 +18,23 @@ class SUMORunner(MlpRunner):
         self.collecter = self.shared_collect_rollout if self.share_policy else self.separated_collect_rollout
         # fill replay buffer with random actions
         self.finish_first_train_reset = False
-        if self.args.save_model:
+        if self.args.save_model and self.model_dir is None:
             num_warmup_episodes = 5
             self.warmup(num_warmup_episodes)
         self.start = time.time()
         self.log_clear()
+
+    def _record_final_info(self, env_info, infos):
+        if infos is None or len(infos) == 0:
+            return
+        info = infos[0]
+        if hasattr(info, "item") and not isinstance(info, dict):
+            info = info.item()
+        if not isinstance(info, dict):
+            return
+        env_info['average_episode_steps'] = info.get('step', self.episode_length)
+        env_info['average_evacuation_rate'] = info.get('evacuation_rate', 0.0)
+        env_info['average_persons_escaped'] = info.get('persons_escaped', 0)
 
     @torch.no_grad()
     def eval(self):
@@ -29,9 +46,37 @@ class SUMORunner(MlpRunner):
         for _ in range(self.args.num_eval_episodes):
             env_info = self.collecter( explore=False, training_episode=False, warmup=False)
             for k, v in env_info.items():
+                eval_infos.setdefault(k, [])
                 eval_infos[k].append(v)
 
         self.log_env(eval_infos, suffix="eval_")
+        self._save_best_eval_model(eval_infos)
+
+    def _save_best_eval_model(self, eval_infos):
+        steps = eval_infos.get('average_episode_steps', [])
+        if len(steps) == 0 or not hasattr(self, "best_save_dir"):
+            return
+
+        mean_steps = float(np.mean(steps))
+        if self.best_eval_steps is not None and mean_steps >= self.best_eval_steps:
+            return
+
+        self.best_eval_steps = mean_steps
+        previous_save_dir = self.save_dir
+        self.save_dir = self.best_save_dir
+        os.makedirs(self.save_dir, exist_ok=True)
+        self.saver()
+        self.save_dir = previous_save_dir
+
+        metrics = {
+            "total_env_steps": int(self.total_env_steps),
+            "eval_average_episode_steps": mean_steps,
+            "eval_average_evacuation_rate": float(np.mean(eval_infos.get('average_evacuation_rate', [0.0]))),
+            "eval_average_persons_escaped": float(np.mean(eval_infos.get('average_persons_escaped', [0.0]))),
+        }
+        with open(os.path.join(self.best_save_dir, "best_eval_metrics.json"), "w", encoding="utf-8") as f:
+            json.dump(metrics, f, ensure_ascii=False, indent=2)
+        print("best eval model saved: " + str(metrics))
 
     # for mpe-simple_spread and mpe-simple_reference
     def shared_collect_rollout(self, explore=True, training_episode=True, warmup=False):
@@ -75,6 +120,7 @@ class SUMORunner(MlpRunner):
         valid_transition = {}
         step_avail_acts = {}
         step_next_avail_acts = {}
+        last_infos = None
 
         for step in range(self.episode_length):
             obs_batch = np.concatenate(obs)
@@ -94,6 +140,7 @@ class SUMORunner(MlpRunner):
 
             # env step and store the relevant episode information
             next_obs, rewards, dones, infos = env.step(env_acts)
+            last_infos = infos
 
             episode_rewards.append(rewards)
             dones_env = np.all(dones, axis=1)
@@ -104,6 +151,7 @@ class SUMORunner(MlpRunner):
             if not explore and np.all(dones_env):
                 average_episode_rewards = np.mean(np.sum(episode_rewards, axis=0))
                 env_info['average_episode_rewards'] = average_episode_rewards
+                self._record_final_info(env_info, infos)
                 return env_info
 
             next_share_obs = next_obs.reshape(n_rollout_threads, -1)
@@ -150,6 +198,7 @@ class SUMORunner(MlpRunner):
             
         average_episode_rewards = np.mean(np.sum(episode_rewards, axis=0))
         env_info['average_episode_rewards'] = average_episode_rewards
+        self._record_final_info(env_info, last_infos)
 
         return env_info
 
@@ -206,6 +255,7 @@ class SUMORunner(MlpRunner):
         valid_transition = {}
         step_avail_acts = {}
         step_next_avail_acts = {}
+        last_infos = None
 
         acts = []
         for p_id in self.policy_ids:
@@ -243,6 +293,7 @@ class SUMORunner(MlpRunner):
 
             # env step and store the relevant episode information
             next_obs, rewards, dones, infos = env.step(env_acts)
+            last_infos = infos
 
             episode_rewards.append(rewards)
             dones_env = np.all(dones, axis=1)
@@ -253,6 +304,7 @@ class SUMORunner(MlpRunner):
             if not explore and np.all(dones_env):
                 average_episode_rewards = np.mean(np.sum(episode_rewards, axis=0))
                 env_info['average_episode_rewards'] = average_episode_rewards
+                self._record_final_info(env_info, infos)
                 return env_info
 
             next_share_obs = []
@@ -311,6 +363,7 @@ class SUMORunner(MlpRunner):
 
         average_episode_rewards = np.mean(np.sum(episode_rewards, axis=0))
         env_info['average_episode_rewards'] = average_episode_rewards
+        self._record_final_info(env_info, last_infos)
 
         return env_info
 
@@ -347,6 +400,9 @@ class SUMORunner(MlpRunner):
         self.env_infos = {}
 
         self.env_infos['average_episode_rewards'] = []
+        self.env_infos['average_episode_steps'] = []
+        self.env_infos['average_evacuation_rate'] = []
+        self.env_infos['average_persons_escaped'] = []
     
     @torch.no_grad()
     def warmup(self, num_warmup_episodes):

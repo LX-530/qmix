@@ -29,8 +29,8 @@ def visualize(map_data, persons, fires, robots, step):
 
 # Main simulation using Robot Environment
 target_area = (3, 32, 2, 7) 
-num_persons = 150 
-max_steps = 300
+num_persons = 140
+max_steps = 200
 
 # 初始化机器人环境
 robot_env = RobotEnvironment('map.json', target_area, num_persons, max_steps)
@@ -44,12 +44,14 @@ print(f"机器人1(火源防护)位置: {robot_env.robot_positions[0] if len(rob
 print(f"机器人2(出口疏散)位置: {robot_env.robot_positions[1] if len(robot_env.robot_positions) > 1 else '未部署'}")
 print(f"火源位置: {list(robot_env.map_loader.fires)}")
 print(f"出口位置: {list(robot_env.map_loader.exits)}")
-
+robot_env.robot_positions[0] = [0, 0]
+robot_env.robot_positions[1] = [0, 0]
 # Simulation loop
+print(f"当前episode共有{robot_env.num_persons}名被困人员")
 for step in range(max_steps):
     # 随机生成两个机器人的动作 (0:上, 1:下, 2:左, 3:右, 4:静止)
-    robot_actions = [random.randint(0, 4), random.randint(0, 4)]
-    # robot_actions = [4, 4]
+    # robot_actions = [random.randint(0, 4), random.randint(0, 4)]
+    robot_actions = [4, 4]
 
     
     # 执行一步仿真

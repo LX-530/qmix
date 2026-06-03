@@ -1,193 +1,104 @@
-# 多机器人火灾疏散环境 - QMIX强化学习
+# 多机器人火灾疏散环境 - MQMIX 强化学习
 
-## 概要
+## 当前目标
 
-`offpolicy\envs\CA\qmix_env.py`中可以修改环境超参数，最长时间步，最大人数，火灾区域，机器人斥力因子。如果想要打开仿真界面设置self.render = True
-注意需要将此处的map_path替换为你的绝对地址！
+本项目当前复现目标只优化疏散时间：默认关闭健康值/死亡对奖励的影响，以 80% 人员完成疏散所需步数作为主要指标。当前版本不允许机器人直接提高出口通行能力，机器人只通过占位和排斥势场改变门口附近的人群排队结构，用于表示组织排队、破坏门口拱形堵塞、减少出口摩擦。
 
-`offpolicy/envs/CA/robot_env.py` 实现了一个火灾疏散环境，其中两个具有不同角色的机器人需要协作疏散被困人员：
+## 关键文件
 
-主函数在`offpolicy\scripts\train\train.py`
+- `offpolicy/envs/envs/CA/robot_env.py`：火灾元胞自动机、人群移动、机器人排斥力、出口服务队列和门口高密度阻滞。
+- `offpolicy/envs/envs/CA/qmix_env.py`：MQMIX 环境封装，设置人员数量、最大步数、疏散目标比例和健康值开关。
+- `offpolicy/envs/envs/CA/map.json`：疏散场景地图。
+- `offpolicy/scripts/evaluate_evacuation.py`：无机器人、默认机器人、手工静态机器人基线评估。
+- `offpolicy/scripts/evaluate_trained_policy.py`：加载已保存 MQMIX checkpoint 做独立复评。
+- `offpolicy/scripts/scan_repulsion_fields.py`：扫描机器人排斥力场强度、半径、衰减和位置差异。
+- `offpolicy/scripts/summarize_evacuation_results.py`：生成论文用 CSV、曲线图、对比图、排斥力场图和文献依据说明。
 
-所有超参数都在`offpolicy\config.py`文件中，调整训练episode数量在24行的num_env_steps。
+## 当前环境机制
 
-模型会保存子啊`offpolicy\scripts\offpolicy`里面，按照训练时间保存，下面有如何加载模型的教程，
-训练结果保存在`offpolicy\scripts\results`，如果测试模型记得修改offpolicy\envs\CA\qmix_env.py里面的超参数打开eval模式。
-
-
-## 第一部分：环境介绍
-- **机器人1（火源防护机器人）**：负责阻止人员靠近火源，减少伤亡
-- **机器人2（出口疏散机器人）**：负责引导人员快速到达安全出口
-
-### 状态空间
-
-每个机器人都有一个**10维状态向量**，针对各自的角色任务进行了优化设计：
-
-#### 机器人1状态向量（火源防护）
-```python
-state_vector = [
-    rx_norm,           # [0] 归一化x坐标 
-    ry_norm,           # [1] 归一化y坐标
-    fire_distance,     # [2] 到最近火源的归一化距离
-    fire_dir_x,        # [3] 火源方向x分量
-    fire_dir_y,        # [4] 火源方向y分量
-    nearby_ratio,      # [5] 周围3格内人员占比
-    fire_danger_ratio, # [6] 火源3格内危险人员占比  
-    avg_health_nearby, # [7] 周围人员平均健康值(0-1)
-    min_health_nearby, # [8] 周围人员最低健康值(0-1)
-    time_progress      # [9] 时间进度(0-1)
-]
-```
-
-#### 机器人2状态向量（出口疏散）
-```python
-state_vector = [
-    rx_norm,             # [0] 归一化x坐标
-    ry_norm,             # [1] 归一化y坐标  
-    exit_distance,       # [2] 到最近出口的归一化距离
-    exit_dir_x,          # [3] 出口方向x分量
-    exit_dir_y,          # [4] 出口方向y分量
-    nearby_ratio,        # [5] 周围3格内人员占比
-    exit_gathering_ratio,# [6] 出口5格内人员聚集占比
-    avg_health_nearby,   # [7] 周围人员平均健康值(0-1)
-    evacuation_rate,     # [8] 当前疏散率(0-1)
-    time_progress        # [9] 时间进度(0-1)
-]
-```
-
-### 动作空间
-
-每个机器人都有**5个离散动作**：
+默认疏散目标：
 
 ```python
-actions = {
-    0: (-1, 0),  # 向上移动
-    1: (1, 0),   # 向下移动  
-    2: (0, -1),  # 向左移动
-    3: (0, 1),   # 向右移动
-    4: (0, 0)    # 停留不动
-}
+target_area = (3, 32, 2, 7)
+num_persons = 140
+max_steps = 200
+use_health = False
+evacuation_target_rate = 0.8
 ```
 
-### 奖励机制 (Reward Function)
+出口约束与门口摩擦：
 
-采用**混合奖励机制**，包含共享奖励和个体奖励：
-
-#### 共享奖励（两个机器人都能获得）
-1. **疏散奖励**：`evacuation_rate * 10 + time_efficiency * 2`
-2. **健康保护奖励**：`(avg_health / 100) * 6`  
-3. **协作效果奖励**：基于火源和出口附近的人员分布
-4. **完成奖励**：
-   - 完美疏散（全员逃脱）：20分
-   - 任务完成但有伤亡：8分
-
-#### 个体奖励
-
-**机器人1（火源防护）**：
-- 位置奖励：在火源3-5格范围内获得最高奖励
-- 防护效果：成功驱赶火源附近人员的奖励
-- 安全维护：火源周围危险人员越少奖励越高
-
-**机器人2（出口疏散）**：
-- 位置奖励：在出口2-4格范围内获得最高奖励  
-- 疏散引导：成功引导人员到出口附近的奖励
-- 疏散效率：基于疏散进度的动态奖励
-
-### 环境动态特性
-
-- **人员行为模型**：基于势场法的人员移动，考虑火源斥力和出口引力
-- **火灾模型**：动态火源影响场，影响人员健康值  
-- **健康系统**：人员健康值随火源接触时间递减
-- **终止条件**：所有人员疏散完毕、死亡或达到最大步数(200步)
-
----
-
-## 第二部分：QMIX算法集成
-
-
-#### 支持的算法
-- **QMIX**: RNN版本
-- **mQMIX**: MLP版本
-
-#### 网络架构
-
-**策略网络**：
 ```python
-# 每个agent的网络配置
-- 输入维度: 10 (状态向量)  
-- 隐藏层大小: 128 (可配置)
-- 输出维度: 5 (动作空间)
-- 网络类型: RNN + MLP (支持序列决策)
+self.exit_capacity_per_step = 1
+self.base_service_time = 2
+self.arch_block_probability = 0.9
+self.arch_density_threshold = 5
+self.robot_repulsion_factor = 0.5
+self.robot_repulsion_cutoff_radius = 4.0
+self.robot_repulsion_decay = 0.35
 ```
 
-**QMIX混合网络**：
-- 将各智能体Q值单调混合为全局Q值
-- 保证个体最优策略与团队最优策略的一致性
-- 支持中心化训练、分布式执行
+含义：
 
-#### 训练配置
+- 未引导时，每个出口每步最多完成 1 人疏散。
+- 人员到达出口后固定等待 2 步。
+- 机器人不再把出口等待时间从 2 步降为 1 步。
+- 机器人不再直接降低门口阻滞概率。
+- 门口高密度区域会触发冲突摩擦和拱形拥堵；机器人只能通过自身占位和排斥力改变局部密度、来流方向和排队结构，从而间接缩短疏散时间。
 
-**核心超参数**：
-这些超参数都在`offpolicy\config.py`文件中可以找到。
+奖励函数只围绕疏散时间：
+
+```python
+reward = newly_escaped * escape_reward - step_penalty
+```
+
+达到 80% 疏散目标时奖励剩余步数，超时惩罚。健康值默认关闭，`avg_health` 固定为 100，仅作为兼容旧日志的字段保留。
+
+## 运行命令
+
+基线评估：
+
 ```bash
---algorithm_name qmix          # 算法选择
---env_name two_robots         # 环境名称  
---num_env_steps 200000        # 训练步数
---episode_length 200          # 每回合最大步数
---buffer_size 5000           # 经验回放缓冲区大小
---hidden_size 128            # 网络隐层大小
---data_chunk_length 80       # RNN训练序列长度
+python -m offpolicy.scripts.evaluate_evacuation --episodes 50 --target-rate 0.8
 ```
 
-**学习配置**：
+GPU 训练示例：
+
 ```bash
---use_rnn_layer True         # 启用RNN层
---lr 0.0005                  # 学习率
---gamma 0.99                 # 折扣因子  
---tau 0.005                  # 软更新系数
---use_double_q True          # 双Q网络
+python -m offpolicy.scripts.train.train --algorithm_name mqmix --num_env_steps 50000 --episode_length 200 --buffer_size 15000 --batch_size 64 --hidden_size 64 --save_interval 5000 --log_interval 5000 --eval_interval 5000 --num_eval_episodes 20 --epsilon_anneal_time 15000
 ```
 
-### 分布式训练支持
+注意：本项目原始参数中 `--cuda` 是 `store_false`，传入 `--cuda` 会关闭 CUDA；GPU 训练时不要带这个参数。当前验证环境为 CUDA PyTorch，设备为 `NVIDIA GeForce RTX 3050 Laptop GPU`。
 
-- **环境并行**：支持多环境并行数据收集
-- **经验重放**：优先经验重放(PER)可选
-- **模型保存**：定期保存训练好的模型参数
+最佳 checkpoint 复评：
 
----
-
-## 第三部分：使用方法和配置
-
-
-### 高级配置
-
-#### 环境自定义
-```python
-# 在offpolicy/envs/CA/qmix_env.py中调整
-target_area = (3, 32, 2, 7)   # 人员初始区域 
-num_persons = 150             # 人员数量
-max_steps = 200              # 最大步数
-map_path = "path/to/map.json" # 地图文件路径
-```
-
-#### 网络架构调整
 ```bash
---hidden_size 256            # 增大网络容量
---use_conv1d True           # 启用卷积层  
---attn True                 # 启用注意力机制
---use_orthogonal_init True  # 正交初始化
+python -m offpolicy.scripts.evaluate_trained_policy --model-dir "D:\github\qmix\offpolicy\scripts\results\two_robots\2_robots\mqmix\check\run13\models_best" --episodes 50 --episode-length 200 --output "D:\github\qmix\offpolicy\scripts\results\two_robots\2_robots\mqmix\check\run13\models_best\trained_eval_repulsion_only_50.json"
 ```
 
-#### 训练优化
+排斥力场扫描：
+
 ```bash
---n_rollout_threads 8       # 并行环境数
---use_value_active_masks True  # 使用价值掩码
---use_policy_active_masks True # 使用策略掩码  
---use_per True              # 优先经验重放
---per_alpha 0.6             # PER alpha参数
+python -m offpolicy.scripts.scan_repulsion_fields --episodes 10 --seed 1200 --block-probs 0.9 --factors 0.5,0.8,1.0,1.2 --cutoffs 3,4,5 --decays 0.35,0.5 --positions upstream_exit,behind_exit,default --output "D:\github\qmix\offpolicy\scripts\results\repulsion_scan_stage2.csv"
 ```
-#### 评估模型
 
-在训练好模型后，可以加载模型参数进行训练。需要在`offpolicy\config.py`中193行加入模型地址，输入绝对路径如`F:\1Business_code\20250910-qmix_fire\qmix\offpolicy\scripts\offpolicy\models2025-09-13-19-08-25\qmix_models`
+生成论文用结果：
 
-还需要将`offpolicy\envs\CA\qmix_env.py`中设置self.eval = True
+```bash
+python -m offpolicy.scripts.summarize_evacuation_results --long-run run13 --best-run run13 --trained-eval "D:\github\qmix\offpolicy\scripts\results\two_robots\2_robots\mqmix\check\run13\models_best\trained_eval_repulsion_only_50.json" --baseline-episodes 50 --output-dir "D:\github\qmix\offpolicy\scripts\results\paper_outputs\run13_repulsion_only"
+```
+
+## 当前结果
+
+旧 `run9` 结果使用了“机器人靠近出口时直接把服务时间从 2 步降到 1 步”的机制，已经作废，不能作为当前结论使用。
+
+当前 `run13` 在“固定出口服务时间 + 独立门口冲突摩擦 + 机器人排斥力”机制下，50 回合复评结果如下：
+
+| 策略 | 平均步数 | 标准差 | 平均疏散人数 | 平均疏散率 | 相比无机器人减少 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 无机器人 | 172.38 | 10.59 | 111.90 | 0.799 | 0.00% |
+| 默认静止机器人 | 155.02 | 5.03 | 112.16 | 0.801 | 10.07% |
+| 手工静态位置 | 171.72 | 9.57 | 112.04 | 0.800 | 0.38% |
+| MQMIX 最佳策略（run13） | 151.04 | 2.78 | 112.08 | 0.801 | 12.38% |
+
+结论：在不直接改变出口服务时间、不直接降低门口阻滞概率的条件下，QMIX 最佳策略仍能通过机器人排斥力和占位使 80% 疏散时间从 172.38 步降到 151.04 步，减少约 12.38%，达到“减少 8% 左右”的目标。

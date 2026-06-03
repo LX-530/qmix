@@ -3,15 +3,22 @@ import os
 import numpy as np
 from pathlib import Path
 import socket
-import wandb
-import setproctitle
 import torch
 from offpolicy.config import get_config
 from offpolicy.utils.util import get_cent_act_dim, get_dim_from_space
 # from offpolicy.envs.sumo_rl.sumo_envs_eval import EVAL_Env
-from offpolicy.envs.env_discrete import DiscreteActionEnv
+from offpolicy.envs.envs.env_discrete import DiscreteActionEnv
+from offpolicy.envs.envs.env_wrappers import DummyVecEnv, SubprocVecEnv
 
-from offpolicy.envs.env_wrappers import DummyVecEnv, SubprocVecEnv
+try:
+    import wandb
+except ImportError:
+    wandb = None
+
+try:
+    import setproctitle
+except ImportError:
+    setproctitle = None
 
 
 def make_train_env(all_args):
@@ -95,6 +102,8 @@ def qmix_main(args):
         os.makedirs(str(run_dir))
 
     if all_args.use_wandb:
+        if wandb is None:
+            raise ImportError("wandb is required when --use_wandb is enabled.")
         # init wandb
         run = wandb.init(config=all_args,
                          project=all_args.env_name,
@@ -121,8 +130,9 @@ def qmix_main(args):
         if not run_dir.exists():
             os.makedirs(str(run_dir))
 
-    setproctitle.setproctitle(str(all_args.algorithm_name) + "-" + str(
-        all_args.env_name) + "-" + str(all_args.experiment_name) + "@" + str(all_args.user_name))
+    if setproctitle is not None:
+        setproctitle.setproctitle(str(all_args.algorithm_name) + "-" + str(
+            all_args.env_name) + "-" + str(all_args.experiment_name) + "@" + str(all_args.user_name))
 
     # set seeds
     torch.manual_seed(all_args.seed)
@@ -184,8 +194,7 @@ def qmix_main(args):
     total_num_steps = 0
     runner = Runner(config=config)
     while total_num_steps < all_args.num_env_steps:
-        s = runner.run()    # 训练入口
-        total_num_steps += 1
+        total_num_steps = runner.run()    # 训练入口
 
     env.close()
     if all_args.use_eval and (eval_env is not env):

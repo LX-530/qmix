@@ -1,0 +1,313 @@
+{
+  "summary": {
+    "policy": "trained_mqmix_best",
+    "episodes": 50,
+    "mean_steps": 151.04,
+    "std_steps": 2.778,
+    "mean_reward": 122.08,
+    "mean_escaped": 112.08,
+    "mean_rate": 0.801
+  },
+  "episodes": [
+    {
+      "average_episode_rewards": 126.0,
+      "average_episode_steps": 149,
+      "average_evacuation_rate": 0.8,
+      "average_persons_escaped": 112
+    },
+    {
+      "average_episode_rewards": 114.0,
+      "average_episode_steps": 155,
+      "average_evacuation_rate": 0.8,
+      "average_persons_escaped": 112
+    },
+    {
+      "average_episode_rewards": 120.0,
+      "average_episode_steps": 152,
+      "average_evacuation_rate": 0.8,
+      "average_persons_escaped": 112
+    },
+    {
+      "average_episode_rewards": 126.0,
+      "average_episode_steps": 149,
+      "average_evacuation_rate": 0.8,
+      "average_persons_escaped": 112
+    },
+    {
+      "average_episode_rewards": 126.0,
+      "average_episode_steps": 149,
+      "average_evacuation_rate": 0.8,
+      "average_persons_escaped": 112
+    },
+    {
+      "average_episode_rewards": 116.0,
+      "average_episode_steps": 154,
+      "average_evacuation_rate": 0.8,
+      "average_persons_escaped": 112
+    },
+    {
+      "average_episode_rewards": 120.0,
+      "average_episode_steps": 152,
+      "average_evacuation_rate": 0.8,
+      "average_persons_escaped": 112
+    },
+    {
+      "average_episode_rewards": 120.0,
+      "average_episode_steps": 153,
+      "average_evacuation_rate": 0.8071428571428572,
+      "average_persons_escaped": 113
+    },
+    {
+      "average_episode_rewards": 124.0,
+      "average_episode_steps": 150,
+      "average_evacuation_rate": 0.8,
+      "average_persons_escaped": 112
+    },
+    {
+      "average_episode_rewards": 126.0,
+      "average_episode_steps": 149,
+      "average_evacuation_rate": 0.8,
+      "average_persons_escaped": 112
+    },
+    {
+      "average_episode_rewards": 124.0,
+      "average_episode_steps": 150,
+      "average_evacuation_rate": 0.8,
+      "average_persons_escaped": 112
+    },
+    {
+      "average_episode_rewards": 122.0,
+      "average_episode_steps": 151,
+      "average_evacuation_rate": 0.8,
+      "average_persons_escaped": 112
+    },
+    {
+      "average_episode_rewards": 122.0,
+      "average_episode_steps": 151,
+      "average_evacuation_rate": 0.8,
+      "average_persons_escaped": 112
+    },
+    {
+      "average_episode_rewards": 124.0,
+      "average_episode_steps": 150,
+      "average_evacuation_rate": 0.8,
+      "average_persons_escaped": 112
+    },
+    {
+      "average_episode_rewards": 122.0,
+      "average_episode_steps": 151,
+      "average_evacuation_rate": 0.8,
+      "average_persons_escaped": 112
+    },
+    {
+      "average_episode_rewards": 128.0,
+      "average_episode_steps": 148,
+      "average_evacuation_rate": 0.8,
+      "average_persons_escaped": 112
+    },
+    {
+      "average_episode_rewards": 126.0,
+      "average_episode_steps": 149,
+      "average_evacuation_rate": 0.8,
+      "average_persons_escaped": 112
+    },
+    {
+      "average_episode_rewards": 122.0,
+      "average_episode_steps": 151,
+      "average_evacuation_rate": 0.8,
+      "average_persons_escaped": 112
+    },
+    {
+      "average_episode_rewards": 124.0,
+      "average_episode_steps": 151,
+      "average_evacuation_rate": 0.8071428571428572,
+      "average_persons_escaped": 113
+    },
+    {
+      "average_episode_rewards": 116.0,
+      "average_episode_steps": 154,
+      "average_evacuation_rate": 0.8,
+      "average_persons_escaped": 112
+    },
+    {
+      "average_episode_rewards": 94.0,
+      "average_episode_steps": 165,
+      "average_evacuation_rate": 0.8,
+      "average_persons_escaped": 112
+    },
+    {
+      "average_episode_rewards": 124.0,
+      "average_episode_steps": 150,
+      "average_evacuation_rate": 0.8,
+      "average_persons_escaped": 112
+    },
+    {
+      "average_episode_rewards": 120.0,
+      "average_episode_steps": 153,
+      "average_evacuation_rate": 0.8071428571428572,
+      "average_persons_escaped": 113
+    },
+    {
+      "average_episode_rewards": 130.0,
+      "average_episode_steps": 147,
+      "average_evacuation_rate": 0.8,
+      "average_persons_escaped": 112
+    },
+    {
+      "average_episode_rewards": 120.0,
+      "average_episode_steps": 152,
+      "average_evacuation_rate": 0.8,
+      "average_persons_escaped": 112
+    },
+    {
+      "average_episode_rewards": 120.0,
+      "average_episode_steps": 152,
+      "average_evacuation_rate": 0.8,
+      "average_persons_escaped": 112
+    },
+    {
+      "average_episode_rewards": 122.0,
+      "average_episode_steps": 151,
+      "average_evacuation_rate": 0.8,
+      "average_persons_escaped": 112
+    },
+    {
+      "average_episode_rewards": 124.0,
+      "average_episode_steps": 150,
+      "average_evacuation_rate": 0.8,
+      "average_persons_escaped": 112
+    },
+    {
+      "average_episode_rewards": 120.0,
+      "average_episode_steps": 152,
+      "average_evacuation_rate": 0.8,
+      "average_persons_escaped": 112
+    },
+    {
+      "average_episode_rewards": 120.0,
+      "average_episode_steps": 152,
+      "average_evacuation_rate": 0.8,
+      "average_persons_escaped": 112
+    },
+    {
+      "average_episode_rewards": 128.0,
+      "average_episode_steps": 148,
+      "average_evacuation_rate": 0.8,
+      "average_persons_escaped": 112
+    },
+    {
+      "average_episode_rewards": 124.0,
+      "average_episode_steps": 150,
+      "average_evacuation_rate": 0.8,
+      "average_persons_escaped": 112
+    },
+    {
+      "average_episode_rewards": 130.0,
+      "average_episode_steps": 147,
+      "average_evacuation_rate": 0.8,
+      "average_persons_escaped": 112
+    },
+    {
+      "average_episode_rewards": 124.0,
+      "average_episode_steps": 150,
+      "average_evacuation_rate": 0.8,
+      "average_persons_escaped": 112
+    },
+    {
+      "average_episode_rewards": 124.0,
+      "average_episode_steps": 150,
+      "average_evacuation_rate": 0.8,
+      "average_persons_escaped": 112
+    },
+    {
+      "average_episode_rewards": 122.0,
+      "average_episode_steps": 151,
+      "average_evacuation_rate": 0.8,
+      "average_persons_escaped": 112
+    },
+    {
+      "average_episode_rewards": 118.0,
+      "average_episode_steps": 153,
+      "average_evacuation_rate": 0.8,
+      "average_persons_escaped": 112
+    },
+    {
+      "average_episode_rewards": 122.0,
+      "average_episode_steps": 151,
+      "average_evacuation_rate": 0.8,
+      "average_persons_escaped": 112
+    },
+    {
+      "average_episode_rewards": 122.0,
+      "average_episode_steps": 151,
+      "average_evacuation_rate": 0.8,
+      "average_persons_escaped": 112
+    },
+    {
+      "average_episode_rewards": 118.0,
+      "average_episode_steps": 154,
+      "average_evacuation_rate": 0.8071428571428572,
+      "average_persons_escaped": 113
+    },
+    {
+      "average_episode_rewards": 124.0,
+      "average_episode_steps": 150,
+      "average_evacuation_rate": 0.8,
+      "average_persons_escaped": 112
+    },
+    {
+      "average_episode_rewards": 128.0,
+      "average_episode_steps": 148,
+      "average_evacuation_rate": 0.8,
+      "average_persons_escaped": 112
+    },
+    {
+      "average_episode_rewards": 122.0,
+      "average_episode_steps": 151,
+      "average_evacuation_rate": 0.8,
+      "average_persons_escaped": 112
+    },
+    {
+      "average_episode_rewards": 120.0,
+      "average_episode_steps": 152,
+      "average_evacuation_rate": 0.8,
+      "average_persons_escaped": 112
+    },
+    {
+      "average_episode_rewards": 120.0,
+      "average_episode_steps": 152,
+      "average_evacuation_rate": 0.8,
+      "average_persons_escaped": 112
+    },
+    {
+      "average_episode_rewards": 128.0,
+      "average_episode_steps": 148,
+      "average_evacuation_rate": 0.8,
+      "average_persons_escaped": 112
+    },
+    {
+      "average_episode_rewards": 114.0,
+      "average_episode_steps": 155,
+      "average_evacuation_rate": 0.8,
+      "average_persons_escaped": 112
+    },
+    {
+      "average_episode_rewards": 128.0,
+      "average_episode_steps": 148,
+      "average_evacuation_rate": 0.8,
+      "average_persons_escaped": 112
+    },
+    {
+      "average_episode_rewards": 120.0,
+      "average_episode_steps": 152,
+      "average_evacuation_rate": 0.8,
+      "average_persons_escaped": 112
+    },
+    {
+      "average_episode_rewards": 126.0,
+      "average_episode_steps": 149,
+      "average_evacuation_rate": 0.8,
+      "average_persons_escaped": 112
+    }
+  ]
+}

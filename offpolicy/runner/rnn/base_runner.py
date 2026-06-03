@@ -1,8 +1,27 @@
 import os
 import numpy as np
-import wandb
 import torch
-from tensorboardX import SummaryWriter
+
+try:
+    import wandb
+except ImportError:
+    wandb = None
+
+try:
+    from tensorboardX import SummaryWriter
+except ImportError:
+    try:
+        from torch.utils.tensorboard import SummaryWriter
+    except ImportError:
+        class SummaryWriter:
+            def __init__(self, *args, **kwargs):
+                pass
+            def add_scalars(self, *args, **kwargs):
+                pass
+            def export_scalars_to_json(self, *args, **kwargs):
+                pass
+            def close(self):
+                pass
 
 from offpolicy.utils.rec_buffer import RecReplayBuffer, PrioritizedRecReplayBuffer
 from offpolicy.utils.util import DecayThenFlatSchedule
