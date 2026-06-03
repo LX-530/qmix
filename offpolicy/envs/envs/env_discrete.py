@@ -1,9 +1,8 @@
 
 
-import gym
 from gym import spaces
 import numpy as np
-from offpolicy.envs.CA.qmix_env import Robot_Env
+from offpolicy.envs.envs.CA.qmix_env import Robot_Env
 
 
 class DiscreteActionEnv(object):

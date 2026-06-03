@@ -1,0 +1,5 @@
+policy,mean_steps,std_steps,mean_escaped,mean_rate,reduction_vs_no_robot_percent
+no_robot,172.38,10.594,111.9,0.799,0.0
+default_stay,155.02,5.034,112.16,0.801,10.071
+static_good,171.72,9.565,112.04,0.8,0.383
+trained_mqmix_best,151.04,2.778,112.08,0.801,12.38

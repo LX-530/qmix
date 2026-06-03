@@ -1,0 +1,30 @@
+{
+  "fig1": [
+    "D:\\github\\qmix\\offpolicy\\scripts\\results\\paper_outputs\\run13_repulsion_only\\figures\\fig1_evacuation_time_comparison.png",
+    "D:\\github\\qmix\\offpolicy\\scripts\\results\\paper_outputs\\run13_repulsion_only\\figures\\fig1_evacuation_time_comparison.svg"
+  ],
+  "fig2": [
+    "D:\\github\\qmix\\offpolicy\\scripts\\results\\paper_outputs\\run13_repulsion_only\\figures\\fig2_cumulative_evacuation_curve.png",
+    "D:\\github\\qmix\\offpolicy\\scripts\\results\\paper_outputs\\run13_repulsion_only\\figures\\fig2_cumulative_evacuation_curve.svg"
+  ],
+  "fig3": [
+    "D:\\github\\qmix\\offpolicy\\scripts\\results\\paper_outputs\\run13_repulsion_only\\figures\\fig3_person_density_heatmaps.png",
+    "D:\\github\\qmix\\offpolicy\\scripts\\results\\paper_outputs\\run13_repulsion_only\\figures\\fig3_person_density_heatmaps.svg"
+  ],
+  "fig4": [
+    "D:\\github\\qmix\\offpolicy\\scripts\\results\\paper_outputs\\run13_repulsion_only\\figures\\fig4_exit_density_difference.png",
+    "D:\\github\\qmix\\offpolicy\\scripts\\results\\paper_outputs\\run13_repulsion_only\\figures\\fig4_exit_density_difference.svg"
+  ],
+  "fig5": [
+    "D:\\github\\qmix\\offpolicy\\scripts\\results\\paper_outputs\\run13_repulsion_only\\figures\\fig5_robot_position_heatmap.png",
+    "D:\\github\\qmix\\offpolicy\\scripts\\results\\paper_outputs\\run13_repulsion_only\\figures\\fig5_robot_position_heatmap.svg"
+  ],
+  "fig6": [
+    "D:\\github\\qmix\\offpolicy\\scripts\\results\\paper_outputs\\run13_repulsion_only\\figures\\fig6_training_convergence.png",
+    "D:\\github\\qmix\\offpolicy\\scripts\\results\\paper_outputs\\run13_repulsion_only\\figures\\fig6_training_convergence.svg"
+  ],
+  "fig7": [
+    "D:\\github\\qmix\\offpolicy\\scripts\\results\\paper_outputs\\run13_repulsion_only\\figures\\fig7_repulsion_field_scan.png",
+    "D:\\github\\qmix\\offpolicy\\scripts\\results\\paper_outputs\\run13_repulsion_only\\figures\\fig7_repulsion_field_scan.svg"
+  ]
+}

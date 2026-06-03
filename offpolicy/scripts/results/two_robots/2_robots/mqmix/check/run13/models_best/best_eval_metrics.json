@@ -1,0 +1,6 @@
+{
+  "total_env_steps": 25000,
+  "eval_average_episode_steps": 151.55,
+  "eval_average_evacuation_rate": 0.800357142857143,
+  "eval_average_persons_escaped": 112.05
+}

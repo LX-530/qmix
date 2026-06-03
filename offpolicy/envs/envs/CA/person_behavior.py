@@ -10,6 +10,12 @@ class Person:
         self.map_loader = map_loader
         self.health = 100  # 初始健康值
         self.is_dead = False  # 死亡状态
+        
+        # 出口服务机制相关状态
+        self.in_exit_process = False  # 是否正在出口处进行疏散服务（等待通过门）
+        self.exit_since_step = None  # 到达出口格的时间步（用于计算已等待时间）
+        self.service_time_needed = 0  # 需要的服务时间（步数）
+        self.service_time_left = 0  # 剩余服务时间（步数）
 
     def get_possible_moves(self, occupancy, dynamic_field):
         x, y = self.position

@@ -1,18 +1,32 @@
 import os
-import wandb
 import numpy as np
 from itertools import chain
-from tensorboardX import SummaryWriter
 import torch
 import time
 
+try:
+    import wandb
+except ImportError:
+    wandb = None
+
+try:
+    from tensorboardX import SummaryWriter
+except ImportError:
+    try:
+        from torch.utils.tensorboard import SummaryWriter
+    except ImportError:
+        class SummaryWriter:
+            def __init__(self, *args, **kwargs):
+                pass
+            def add_scalars(self, *args, **kwargs):
+                pass
+            def export_scalars_to_json(self, *args, **kwargs):
+                pass
+            def close(self):
+                pass
+
 from offpolicy.utils.mlp_buffer import MlpReplayBuffer, PrioritizedMlpReplayBuffer
 from offpolicy.utils.util import is_discrete, is_multidiscrete, DecayThenFlatSchedule
-from datetime import datetime
-
-now = datetime.now()
-out_res = now.strftime("%Y-%m-%d-%H-%M-%S")
-out_model_path = str("..\offpolicy\models" + out_res)
 class MlpRunner(object):
 
     def __init__(self, config):
@@ -98,7 +112,9 @@ class MlpRunner(object):
             if not os.path.exists(self.log_dir):
                 os.makedirs(self.log_dir)
             self.writter = SummaryWriter(self.log_dir)
-            self.save_dir = out_model_path + "\qmix_models"
+            self.save_dir = str(self.run_dir / 'models')
+            self.best_save_dir = str(self.run_dir / 'models_best')
+            self.best_eval_steps = None
             if not os.path.exists(self.save_dir):
                 os.makedirs(self.save_dir)
 
@@ -277,8 +293,10 @@ class MlpRunner(object):
         for pid in self.policy_ids:
             path = str(self.model_dir) + str(pid)
             print("load the pretrained model from {}".format(path))
-            policy_critic_state_dict = torch.load(path + '/critic.pt')
-            policy_actor_state_dict = torch.load(path + '/actor.pt')
+            policy_critic_state_dict = torch.load(
+                path + '/critic.pt', map_location=self.device, weights_only=True)
+            policy_actor_state_dict = torch.load(
+                path + '/actor.pt', map_location=self.device, weights_only=True)
 
             self.policies[pid].critic.load_state_dict(policy_critic_state_dict)
             self.policies[pid].actor.load_state_dict(policy_actor_state_dict)
@@ -288,10 +306,12 @@ class MlpRunner(object):
         for pid in self.policy_ids:
             path = str(self.model_dir) + '/' +str(pid)
             print("load the pretrained model from {}".format(path))
-            policy_q_state_dict = torch.load(path + '/q_network.pt')           
+            policy_q_state_dict = torch.load(
+                path + '/q_network.pt', map_location=self.device, weights_only=True)
             self.policies[pid].q_network.load_state_dict(policy_q_state_dict)
             
-        policy_mixer_state_dict = torch.load(str(self.model_dir) + '/mixer.pt')
+        policy_mixer_state_dict = torch.load(
+            str(self.model_dir) + '/mixer.pt', map_location=self.device, weights_only=True)
         self.trainer.mixer.load_state_dict(policy_mixer_state_dict)
         print("加载模型成功，模型地址为：", self.model_dir)
 
